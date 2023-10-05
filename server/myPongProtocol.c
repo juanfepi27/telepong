@@ -189,14 +189,14 @@ void* handleClient(void* arg){
 
     //lets start the game or leave the game if it is full
     if(flagRoom >= 0){
-        messageLog = "We found an available room";
-        writeLog(logFile, messageLog);
         pthread_mutex_lock(&rooms[flagRoom].mutex);
         rooms[flagRoom].clientsConnected++; // 1 or 2
         numberOfPlayer = rooms[flagRoom].clientsConnected; // 1 or 2
         if(rooms[flagRoom].clientsConnected == 2){
             rooms[flagRoom].open = false;
         }
+        messageLog = "We found an available room";
+        writeLogRoom(flagRoom,numberOfPlayer,logFile,messageLog);
         pthread_mutex_unlock(&rooms[flagRoom].mutex);
 
         // El cliente ya debió haber mandado el request PLAYER NEW
@@ -211,12 +211,12 @@ void* handleClient(void* arg){
                 char* nickname2 = rooms[flagRoom].nicknamePlayer2;
 
                 messageLog = "Starts a game";
-                writeLog(logFile, messageLog);
+                writeLogRoom(flagRoom,numberOfPlayer,logFile,messageLog);
 
                 int totalLength = snprintf(NULL, 0, "%s %s %s", message, nickname1, nickname2);
                 char* response = (char*)malloc(totalLength + 1);  // +1 para el carácter nulo
                 snprintf(response, totalLength + 1, "%s %s %s", message, nickname1, nickname2);
-                sendResponse(connfd, response, logFile);
+                sendResponse(flagRoom, numberOfPlayer, connfd, response, logFile);
 
                 break;
             }
@@ -245,14 +245,14 @@ void receiveRequest(int connfd, int numberOfRoom, int numberOfPlayer, char* logF
             usleep(10000);
         } else {
             messageLog = "Error while receiving data from the client";
-            writeLog(logFile, messageLog);
+            writeLogRoom(numberOfRoom,numberOfPlayer,logFile,messageLog);
             perror("Error while receiving data from the client");
             exit(1);
         }
     } else if (bytes_received == 0) {
         // El cliente ha cerrado la conexión
         messageLog = "Client closes connection";
-        writeLog(logFile, messageLog);
+        writeLogRoom(numberOfRoom,numberOfPlayer,logFile,messageLog);
         close(connfd);
     } else {
         // Procesar los datos recibidos
@@ -261,12 +261,12 @@ void receiveRequest(int connfd, int numberOfRoom, int numberOfPlayer, char* logF
     }
 }
 
-void sendResponse(int connfd, char *response, char *logFile){
+void sendResponse(int numberOfRoom, int numberOfPlayer, int connfd, char *response, char *logFile){
     int totalLength = snprintf(NULL, 0, "Server sends: %s", response);
     char *messageLog = (char*)malloc(totalLength + 1);  // +1 para el carácter nulo
     snprintf(messageLog, totalLength + 1, "Server sends: %s", response);
 
-    writeLog(logFile, messageLog);
+    writeLogRoom(numberOfRoom,numberOfPlayer,logFile,messageLog);
     send(connfd, response, strlen(response),0);
     printf("To client: %s\n", response);
 }
@@ -292,68 +292,68 @@ void classifyRequest(int connfd, char *request, int numberOfRoom, int numberOfPl
         }
         else if (strcmp(tokens[1],END)==0){
             messageLog = "Server receives that the game ended";
-            writeLog(logFile, messageLog);
+            writeLogRoom(numberOfRoom,numberOfPlayer,logFile,messageLog);
             reqGameEnd(connfd,numberOfRoom, numberOfPlayer);
         }
         else{
             //UNRECOGNIZED
             messageLog = "Error: <GAME>, second parameter unrecognized";
-            writeLog(logFile, messageLog);
+            writeLogRoom(numberOfRoom,numberOfPlayer,logFile,messageLog);
             printf("Error: <GAME>, second parameter unrecognized");
         }
     }
     else if(strcmp(tokens[0],PLAYER)==0){
         if(strcmp(tokens[1],NEW)==0){
             messageLog = "Server receives a new player";
-            writeLog(logFile, messageLog);
+            writeLogRoom(numberOfRoom,numberOfPlayer,logFile,messageLog);
             reqPlayerNew(connfd,tokens[2],numberOfRoom,numberOfPlayer, logFile);
         }
         else if(strcmp(tokens[1],LEFT)==0){
             messageLog = "Server receives that a player left the game during the match";
-            writeLog(logFile, messageLog);
+            writeLogRoom(numberOfRoom,numberOfPlayer,logFile,messageLog);
             reqPlayerLeft(connfd, numberOfRoom, numberOfPlayer, logFile);
         }
         else if(strcmp(tokens[1],BYE)==0){
             messageLog = "Server receives the confirmation that leaves the room after winning by others left";
-            writeLog(logFile, messageLog);
+            writeLogRoom(numberOfRoom,numberOfPlayer,logFile,messageLog);
             reqPlayerBye(connfd, numberOfRoom, numberOfPlayer);
         }
         else if(strcmp(tokens[1],QUIT)==0){
             messageLog = "Server receives that a player left the game at the waiting room";
-            writeLog(logFile, messageLog);
+            writeLogRoom(numberOfRoom,numberOfPlayer,logFile,messageLog);
             reqPlayerQuit(connfd, numberOfRoom, numberOfPlayer);
         }
         else{
             messageLog = "Error: <PLAYER>, second parameter unrecognized";
-            writeLog(logFile, messageLog);
+            writeLogRoom(numberOfRoom,numberOfPlayer,logFile,messageLog);
             printf("Error: <PLAYER>, second parameter unrecognized");
         }
     }
     else if(strcmp(tokens[0],PAD)==0){
         if(strcmp(tokens[1],UP)==0){
             messageLog = "Server receives that the pad is going upwards";
-            writeLog(logFile, messageLog);
+            writeLogRoom(numberOfRoom,numberOfPlayer,logFile,messageLog);
             reqPadUp(numberOfRoom, numberOfPlayer, logFile);
         }
         else if(strcmp(tokens[1],DOWN)==0){
             messageLog = "Server receives that the pad is going downwards";
-            writeLog(logFile, messageLog);
+            writeLogRoom(numberOfRoom,numberOfPlayer,logFile,messageLog);
             reqPadDown(numberOfRoom, numberOfPlayer, logFile);
         }
         else if(strcmp(tokens[1],STILL)==0){
             messageLog = "Server receives that the pad is still";
-            writeLog(logFile, messageLog);
+            writeLogRoom(numberOfRoom,numberOfPlayer,logFile,messageLog);
             reqPadStill(numberOfRoom, numberOfPlayer, logFile);
         }
         else{
             messageLog = "Error: <PAD>, second parameter unrecognized";
-            writeLog(logFile, messageLog);
+            writeLogRoom(numberOfRoom,numberOfPlayer,logFile,messageLog);
             printf("Error: <PAD>, second parameter unrecognized");
         }
     }
     else{
         messageLog = "Error: first parameter unrecognized while receiving a request";
-        writeLog(logFile, messageLog);
+        writeLogRoom(numberOfRoom,numberOfPlayer,logFile,messageLog);
         printf("Error: first parameter unrecognized");
     }
 }
@@ -362,10 +362,10 @@ void reqPlayerLeft(int connfd, int numberOfRoom, int numberOfPlayer, char *logFi
     char* response = "PLAYER DISCONNECTED";
     pthread_mutex_lock(&rooms[numberOfRoom].mutex);
     if (connfd == rooms[numberOfRoom].connfd1){
-        sendResponse(rooms[numberOfRoom].connfd2, response, logFile);
+        sendResponse(numberOfRoom, numberOfPlayer, rooms[numberOfRoom].connfd2, response, logFile);
     }
     else if (connfd == rooms[numberOfRoom].connfd2){
-        sendResponse(rooms[numberOfRoom].connfd1, response, logFile);
+        sendResponse(numberOfRoom, numberOfPlayer, rooms[numberOfRoom].connfd1, response, logFile);
     }
     rooms[numberOfRoom].clientsConnected = 0;
     rooms[numberOfRoom].nicknamePlayer1 = NULL;
@@ -409,9 +409,9 @@ void reqGameEnd(int connfd, int numberOfRoom, int numberOfPlayer){
     pthread_exit(NULL);
 }
 
-void reqGamePoint(int numberOfRoom, int numberOfPLayer, char* side, char* logFile){
+void reqGamePoint(int numberOfRoom, int numberOfPlayer, char* side, char* logFile){
     pthread_mutex_lock(&rooms[numberOfRoom].mutex);
-    if (numberOfPLayer==1){
+    if (numberOfPlayer==1){
         rooms[numberOfRoom].scorePlayer1 += 1;
     }
     else {
@@ -422,6 +422,14 @@ void reqGamePoint(int numberOfRoom, int numberOfPLayer, char* side, char* logFil
     int totalLength = snprintf(NULL, 0, "Server receives that %s scores a point", side);
     char *messageLog = (char*)malloc(totalLength + 1);  // +1 para el carácter nulo
     snprintf(messageLog, totalLength + 1, "Server receives that %s scores a point", side);
+
+    writeLogRoom(numberOfRoom,numberOfPlayer,logFile,messageLog);
+}
+
+void writeLogRoom(int numberOfRoom, int numberOfPlayer, char* logFile, char* message){
+    int totalLength = snprintf(NULL, 0, "- source[room: %d|player: %d] - %s", numberOfRoom, numberOfPlayer, message);
+    char *messageLog = (char*)malloc(totalLength + 1);  // +1 para el carácter nulo
+    snprintf(messageLog, totalLength + 1, "- source[room: %d|player: %d] - %s", numberOfRoom, numberOfPlayer, message);
 
     writeLog(logFile, messageLog);
 }
@@ -452,7 +460,7 @@ void reqPlayerNew(int connfd, char* nickname, int numberOfRoom, int numberOfPlay
         rooms[numberOfRoom].nicknamePlayer1 = strdup(nickname);
         rooms[numberOfRoom].connfd1 = connfd;
         char* response = "PLAYER WAIT";
-        sendResponse(connfd, response, logFile);
+        sendResponse(numberOfRoom, numberOfPlayer, connfd, response, logFile);
     }
     else if(numberOfPlayer == 2){
         rooms[numberOfRoom].nicknamePlayer2=strdup(nickname);
@@ -469,8 +477,8 @@ void reqPadUp(int numberOfRoom, int numberOfPlayer, char *logFile){
         response = "PAD MOVE UP RIGHT";
     }
 
-    sendResponse(rooms[numberOfRoom].connfd1, response, logFile);
-    sendResponse(rooms[numberOfRoom].connfd2, response, logFile);
+    sendResponse(numberOfRoom, numberOfPlayer, rooms[numberOfRoom].connfd1, response, logFile);
+    sendResponse(numberOfRoom, numberOfPlayer, rooms[numberOfRoom].connfd2, response, logFile);
 }
 
 void reqPadDown(int numberOfRoom, int numberOfPlayer, char *logFile){
@@ -482,8 +490,8 @@ void reqPadDown(int numberOfRoom, int numberOfPlayer, char *logFile){
         response = "PAD MOVE DOWN RIGHT";
     }
 
-    sendResponse(rooms[numberOfRoom].connfd1, response, logFile);
-    sendResponse(rooms[numberOfRoom].connfd2, response, logFile);
+    sendResponse(numberOfRoom, numberOfPlayer, rooms[numberOfRoom].connfd1, response, logFile);
+    sendResponse(numberOfRoom, numberOfPlayer, rooms[numberOfRoom].connfd2, response, logFile);
 }
 
 void reqPadStill(int numberOfRoom, int numberOfPlayer, char *logFile){
@@ -495,8 +503,8 @@ void reqPadStill(int numberOfRoom, int numberOfPlayer, char *logFile){
         response = "PAD MOVE STILL RIGHT";
     }
 
-    sendResponse(rooms[numberOfRoom].connfd1, response, logFile);
-    sendResponse(rooms[numberOfRoom].connfd2, response, logFile);
+    sendResponse(numberOfRoom, numberOfPlayer, rooms[numberOfRoom].connfd1, response, logFile);
+    sendResponse(numberOfRoom, numberOfPlayer, rooms[numberOfRoom].connfd2, response, logFile);
 }
 
 void closeConnection(int sockfd){
