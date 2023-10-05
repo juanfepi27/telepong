@@ -69,6 +69,7 @@ class Ball:
 		if self.posy <= 0 or self.posy >= HEIGHT:
 			self.yFac *= -1
 
+		#if the ball makes point
 		if self.posx <= 0 and self.firstTime:
 			self.firstTime = 0
 			return 1
@@ -339,12 +340,12 @@ def pong(nicknamePlayer1,nicknamePlayer2,client_socket):
 		# +1 -> Geek_2 has scored
 		# 0 -> None of them scored
 		if point == -1:
+			message = "GAME POINT LEFT"
+			send_request(client_socket, message)
 			geek1Score += 1
-			# message = "GAME POINT " + nicknamePlayer1
-			# send_request(client_socket, message)
 		elif point == 1:
-			# message = "GAME POINT " + nicknamePlayer2
-			# send_request(client_socket, message)
+			message = "GAME POINT RIGHT"
+			send_request(client_socket, message)
 			geek2Score += 1
 
 		# Someone has scored a point and the ball is out of bounds. So, we reset it's position

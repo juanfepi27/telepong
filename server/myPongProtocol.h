@@ -39,6 +39,7 @@ const char* CHANGE = "CHANGE"; //When the server sends the ball data to the clie
 // UNRECOGNIZED
 #define UNRECOGNIZED = "UNRECOGNIZED"
 
+void writeLog(char* logFile, char* message);
 int setUpServer(char* port, char* logFile);
 void* handleClient(void* arg);
 void receiveRequest(int connfd, int numberOfRoom, int numberOfPlayer, char* logFile);
@@ -48,7 +49,7 @@ void reqPlayerLeft( int connfd, int numberOfRoom, int numberOfPlayer, char* logF
 void reqPlayerBye(int connfd, int numberOfRoom, int numberOfPlayer);
 void reqPlayerQuit(int connfd, int numberOfRoom, int numberOfPlayer);
 void reqGameEnd(int connfd, int numberOfRoom, int numberOfPlayer);
-void writeLog(char* logFile, char* message);
+void reqGamePoint(int numberOfRoom, int numberOfPLayer, char* side, char* logFile);
 void reqPlayerNew(int connfd, char *nickname, int numberOfRoom, int numberOfPlayer, char* logFile);
 void reqPadUp(int numberOfRoom, int numberOfPlayer, char* logFile);
 void reqPadDown(int numberOfRoom, int numberOfPlayer, char* logFile);

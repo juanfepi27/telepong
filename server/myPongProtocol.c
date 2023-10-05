@@ -288,9 +288,7 @@ void classifyRequest(int connfd, char *request, int numberOfRoom, int numberOfPl
 
     if(strcmp(tokens[0], GAME) == 0){
         if(strcmp(tokens[1],POINT)==0){
-            messageLog = "Server receives a point";
-            writeLog(logFile, messageLog);
-            // reqGamePoint(numberOfRoom, numberOfPlayer);
+            reqGamePoint(numberOfRoom, numberOfPlayer, tokens[2], logFile);
         }
         else if (strcmp(tokens[1],END)==0){
             messageLog = "Server receives that the game ended";
@@ -411,9 +409,22 @@ void reqGameEnd(int connfd, int numberOfRoom, int numberOfPlayer){
     pthread_exit(NULL);
 }
 
-// void reqGamePoint(int numberOfRoom, int numberOfPLayer){
+void reqGamePoint(int numberOfRoom, int numberOfPLayer, char* side, char* logFile){
+    pthread_mutex_lock(&rooms[numberOfRoom].mutex);
+    if (numberOfPLayer==1){
+        rooms[numberOfRoom].scorePlayer1 += 1;
+    }
+    else {
+        rooms[numberOfRoom].scorePlayer2 += 1;
+    }
+    pthread_mutex_unlock(&rooms[numberOfRoom].mutex);
 
-// }
+    int totalLength = snprintf(NULL, 0, "Server receives that %s scores a point", side);
+    char *messageLog = (char*)malloc(totalLength + 1);  // +1 para el carácter nulo
+    snprintf(messageLog, totalLength + 1, "Server receives that %s scores a point", side);
+
+    writeLog(logFile, messageLog);
+}
 
 void writeLog(char* logFile, char* message){
     FILE *f = fopen(logFile, "a");
