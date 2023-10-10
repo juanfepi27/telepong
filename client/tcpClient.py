@@ -244,7 +244,17 @@ def waitingRoom(running,client_socket):
 		
 		arr_return = receive_response(client_socket)
 		if(arr_return):
-			running = arr_return[0]
+			if(arr_return[0]==START):
+				running = arr_return[0]
+			elif(arr_return[0]==FULL):
+				screen.fill(BLACK)
+				textWinner = font20.render("No rooms available yet, check back soon", True, WHITE)
+				textRectWinner = textWinner.get_rect()
+				textRectWinner.center = (WIDTH//2, HEIGHT//2)
+				screen.blit(textWinner, textRectWinner)
+				pygame.display.update()
+				pygame.time.wait(7000)
+				sys.exit(0)
 
 	return arr_return[1], arr_return[2]
 

@@ -9,6 +9,7 @@ START = 'START' #When the two users are connected
 END = 'END' #When the game is over because one of the two players has won
 POINT = 'POINT' #When one of the two players scores a point
 SCORE = 'SCORE' #When the game score changes because one of the two players scores a point
+FULL = 'FULL' #When game rooms are full
 
 # PLAYER
 PLAYER = 'PLAYER' 

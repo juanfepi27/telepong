@@ -1,6 +1,7 @@
 import socket
 import sys
 from constants import *
+import time
 
 def set_up_client(nicknamePlayer):
     client_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
@@ -23,7 +24,13 @@ def set_up_client(nicknamePlayer):
 
 def send_request(client_socket,message):
     print("To server: ", message, "\n")
-    client_socket.send(bytes(message, ENCONDING_FORMAT))
+
+    while True:
+        try:
+            client_socket.send(bytes(message, ENCONDING_FORMAT))
+            break
+        except BlockingIOError:
+            time.sleep(0.1)
 
 def classify_request(request):
 
@@ -76,6 +83,8 @@ def classify_response(response):
             resp_game_end()
         elif(arr_response[1] == SCORE):
             resp_game_score()
+        elif(arr_response[1] == FULL):
+            return resp_game_full(arr_response)
         else:
             unrecognized_data(response)
 
@@ -124,6 +133,10 @@ def resp_game_end():
 
 def resp_game_score():
     pass
+
+def resp_game_full(arr_response):
+    arr_return = [arr_response[1]]
+    return arr_return
 
 ##player
 ###REQUEST

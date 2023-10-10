@@ -228,7 +228,9 @@ void* handleClient(void* arg){
     }else{
         messageLog = "There are not available rooms yet";
         writeLog(logFile, messageLog);
-        //throw to a disconnection screen
+        char* message = "GAME FULL";
+        sendResponse(flagRoom,-1,connfd,message,logFile);
+        pthread_exit(NULL);
     }
 }
 
@@ -368,8 +370,8 @@ void reqPlayerLeft(int connfd, int numberOfRoom, int numberOfPlayer, char *logFi
         sendResponse(numberOfRoom, numberOfPlayer, rooms[numberOfRoom].connfd1, response, logFile);
     }
     rooms[numberOfRoom].clientsConnected = 0;
-    rooms[numberOfRoom].nicknamePlayer1 = NULL;
-    rooms[numberOfRoom].nicknamePlayer2 = NULL;
+    rooms[numberOfRoom].nicknamePlayer1 = "";
+    rooms[numberOfRoom].nicknamePlayer2 = "";
     rooms[numberOfRoom].connfd1 = -1;
     rooms[numberOfRoom].connfd2 = -1;
     rooms[numberOfRoom].scorePlayer1 = 0;
@@ -397,8 +399,8 @@ void reqPlayerQuit(int connfd, int numberOfRoom, int numberOfPlayer){
 void reqGameEnd(int connfd, int numberOfRoom, int numberOfPlayer){
     pthread_mutex_lock(&rooms[numberOfRoom].mutex);
     rooms[numberOfRoom].clientsConnected = 0;
-    rooms[numberOfRoom].nicknamePlayer1 = NULL;
-    rooms[numberOfRoom].nicknamePlayer2 = NULL;
+    rooms[numberOfRoom].nicknamePlayer1 = "";
+    rooms[numberOfRoom].nicknamePlayer2 = "";
     rooms[numberOfRoom].connfd1 = -1;
     rooms[numberOfRoom].connfd2 = -1;
     rooms[numberOfRoom].scorePlayer1 = 0;
