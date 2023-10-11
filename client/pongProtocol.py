@@ -1,7 +1,7 @@
-import socket
-import sys
 from constants import *
+import socket
 import time
+import sys
 
 def set_up_client(nicknamePlayer):
     client_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
