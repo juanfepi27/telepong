@@ -364,10 +364,10 @@ void reqPlayerLeft(int connfd, int numberOfRoom, int numberOfPlayer, char *logFi
     char* response = "PLAYER DISCONNECTED";
     pthread_mutex_lock(&rooms[numberOfRoom].mutex);
     if (connfd == rooms[numberOfRoom].connfd1){
-        sendResponse(numberOfRoom, numberOfPlayer, rooms[numberOfRoom].connfd2, response, logFile);
+        sendResponse(numberOfRoom, 2, rooms[numberOfRoom].connfd2, response, logFile);
     }
     else if (connfd == rooms[numberOfRoom].connfd2){
-        sendResponse(numberOfRoom, numberOfPlayer, rooms[numberOfRoom].connfd1, response, logFile);
+        sendResponse(numberOfRoom, 1, rooms[numberOfRoom].connfd1, response, logFile);
     }
     rooms[numberOfRoom].clientsConnected = 0;
     rooms[numberOfRoom].nicknamePlayer1 = "";
@@ -479,8 +479,8 @@ void reqPadUp(int numberOfRoom, int numberOfPlayer, char *logFile){
         response = "PAD MOVE UP RIGHT";
     }
 
-    sendResponse(numberOfRoom, numberOfPlayer, rooms[numberOfRoom].connfd1, response, logFile);
-    sendResponse(numberOfRoom, numberOfPlayer, rooms[numberOfRoom].connfd2, response, logFile);
+    sendResponse(numberOfRoom, 1, rooms[numberOfRoom].connfd1, response, logFile);
+    sendResponse(numberOfRoom, 2, rooms[numberOfRoom].connfd2, response, logFile);
 }
 
 void reqPadDown(int numberOfRoom, int numberOfPlayer, char *logFile){
@@ -492,8 +492,8 @@ void reqPadDown(int numberOfRoom, int numberOfPlayer, char *logFile){
         response = "PAD MOVE DOWN RIGHT";
     }
 
-    sendResponse(numberOfRoom, numberOfPlayer, rooms[numberOfRoom].connfd1, response, logFile);
-    sendResponse(numberOfRoom, numberOfPlayer, rooms[numberOfRoom].connfd2, response, logFile);
+    sendResponse(numberOfRoom, 1, rooms[numberOfRoom].connfd1, response, logFile);
+    sendResponse(numberOfRoom, 2, rooms[numberOfRoom].connfd2, response, logFile);
 }
 
 void reqPadStill(int numberOfRoom, int numberOfPlayer, char *logFile){
@@ -505,8 +505,8 @@ void reqPadStill(int numberOfRoom, int numberOfPlayer, char *logFile){
         response = "PAD MOVE STILL RIGHT";
     }
 
-    sendResponse(numberOfRoom, numberOfPlayer, rooms[numberOfRoom].connfd1, response, logFile);
-    sendResponse(numberOfRoom, numberOfPlayer, rooms[numberOfRoom].connfd2, response, logFile);
+    sendResponse(numberOfRoom, 1, rooms[numberOfRoom].connfd1, response, logFile);
+    sendResponse(numberOfRoom, 2, rooms[numberOfRoom].connfd2, response, logFile);
 }
 
 void closeConnection(int sockfd){
