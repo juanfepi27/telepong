@@ -26,14 +26,13 @@ struct room{
     int scorePlayer1;
     int scorePlayer2;
     pthread_mutex_t mutex;
-};
+} rooms[MAX_ROOMS];
 
 struct threadArgs{
     int connfd;
     char *logFile;
 };
 
-struct room rooms[MAX_ROOMS];
 
 //function definitions
 
