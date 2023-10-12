@@ -9,6 +9,7 @@ if __name__ == '__main__':
     pygame.init()
     font = pygame.font.Font('freesansbold.ttf', 20)
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    #screen = pygame.display.set_mode((WIDTH, HEIGHT),flags=pygame.NOFRAME)
     pygame.display.set_caption("Pong")
     clock = pygame.time.Clock()
 

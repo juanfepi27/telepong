@@ -1,4 +1,4 @@
-#include "myPongProtocol.h"
+#include "pongProtocol.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,6 +13,8 @@
 #include <pthread.h>
 #include <fcntl.h>
 #include <errno.h>
+
+//struct definitions
 
 struct room{
     bool open;
@@ -33,7 +35,46 @@ struct threadArgs{
 
 struct room rooms[MAX_ROOMS];
 
-int setUpServer(char* port, char* logFile){
+//function definitions
+
+void writeLogRoom(int numberOfRoom, int numberOfPlayer, char* logFile, char* message){
+    //concat source information
+    int totalLength = snprintf(NULL, 0, "- source[room: %d|player: %d] - %s", numberOfRoom, numberOfPlayer, message);
+    char *messageLog = (char*)malloc(totalLength + 1);  // +1 para el carácter nulo
+    snprintf(messageLog, totalLength + 1, "- source[room: %d|player: %d] - %s", numberOfRoom, numberOfPlayer, message);
+
+    writeLog(logFile, messageLog);
+}
+
+//------------------------------------------------------------------------------------//
+
+void writeLog(char* logFile, char* message){
+    // Open the file to write on 
+    FILE *f = fopen(logFile, "a");
+    if (f == NULL){
+        printf("Error opening file!\n");
+        exit(1);
+    }
+
+    // Get the actual time
+    time_t actualTime;
+    struct tm *infoTime;
+    
+    time(&actualTime);
+    infoTime = localtime(&actualTime);
+
+    // Giving format to the actual time and concat it with the message to log
+    fprintf(f,"[%02d/%02d/%04d %02d:%02d:%02d] %s\n",
+           infoTime->tm_mday, infoTime->tm_mon + 1, infoTime->tm_year + 1900,
+           infoTime->tm_hour, infoTime->tm_min, infoTime->tm_sec,message);
+
+    // Close the file
+    fclose(f);
+}
+
+//------------------------------------------------------------------------------------//
+
+void setUpServer(char* port, char* logFile){
     int sockfd, connfd, len;
     struct sockaddr_in servaddr, cli;
     struct threadArgs args;
@@ -48,10 +89,12 @@ int setUpServer(char* port, char* logFile){
         printf("socket creation failed...\n");
         exit(0);
     }
-    else
+    else{ 
         messageLog = "Socket successfully created with AF_INET and SOCK_STREAM";
         writeLog(logFile, messageLog);
         printf("Socket successfully created..\n");
+    }
+
     bzero(&servaddr, sizeof(servaddr));
 
     // assign IP, PORT
@@ -66,11 +109,13 @@ int setUpServer(char* port, char* logFile){
         printf("socket bind failed...\n");
         exit(0);
     }
-    else
+    else{ 
         messageLog = "Socket successfully binded";
         writeLog(logFile, messageLog);
         printf("Socket successfully binded..\n");
+    }
 
+    //setting as non blocking socket
     int flags = fcntl(sockfd, F_GETFL, 0);
 
     if (flags == -1) {
@@ -100,6 +145,8 @@ int setUpServer(char* port, char* logFile){
         printf("Server listening..\n");
     }
 
+    //create rooms
+
     //initialize rooms
     for (int i=0; i < MAX_ROOMS; i++){
         rooms[i].open = 1;
@@ -115,7 +162,10 @@ int setUpServer(char* port, char* logFile){
 
     len = sizeof(cli);
 
+    //we keep listening for connections
     while(1){
+
+        //we verify if there are incoming connections
         connfd = accept(sockfd, (SA*)&cli, &len);
         if (connfd < 0) {
             if (errno == EWOULDBLOCK || errno == EAGAIN) {
@@ -134,6 +184,7 @@ int setUpServer(char* port, char* logFile){
             writeLog(logFile, messageLog);
             printf("server accept the client...\n");
 
+            //setting as non-blocking the client
             int client_flags = fcntl(connfd, F_GETFL, 0);
             if (client_flags == -1) {
                 messageLog = "Error while getting the client socket flags";
@@ -149,6 +200,7 @@ int setUpServer(char* port, char* logFile){
                 exit(1);
             }
 
+            //creating the thred to handle the request response with the clients
             pthread_t client_thread;
             int* connfd_ptr = malloc(sizeof(int));
             *connfd_ptr = connfd;
@@ -156,8 +208,9 @@ int setUpServer(char* port, char* logFile){
             args.logFile = logFile;
             pthread_create(&client_thread, NULL, handleClient, &args);
     }
-    return connfd;
 }
+
+//------------------------------------------------------------------------------------//
 
 void* handleClient(void* arg){
     int connfd = ((struct threadArgs*)arg)->connfd;
@@ -199,13 +252,14 @@ void* handleClient(void* arg){
         writeLogRoom(flagRoom,numberOfPlayer,logFile,messageLog);
         pthread_mutex_unlock(&rooms[flagRoom].mutex);
 
-        // El cliente ya debió haber mandado el request PLAYER NEW
+        // Client must had sent the request PLAYER NEW
         receiveRequest(connfd,flagRoom,numberOfPlayer,logFile);
 
-        // Esperar a que el otro jugador se conecte
+        // Wait for the other player 
         while(true){
             receiveRequest(connfd,flagRoom,numberOfPlayer,logFile);
             if(rooms[flagRoom].clientsConnected == 2 && strcmp(rooms[flagRoom].nicknamePlayer1,"")!=0 && strcmp(rooms[flagRoom].nicknamePlayer2,"")!=0){
+                // Set up the game
                 char* message = "GAME START";
                 char* nickname1 = rooms[flagRoom].nicknamePlayer1;
                 char* nickname2 = rooms[flagRoom].nicknamePlayer2;
@@ -213,6 +267,7 @@ void* handleClient(void* arg){
                 messageLog = "Starts a game";
                 writeLogRoom(flagRoom,numberOfPlayer,logFile,messageLog);
 
+                // Concatenate the response
                 int totalLength = snprintf(NULL, 0, "%s %s %s", message, nickname1, nickname2);
                 char* response = (char*)malloc(totalLength + 1);  // +1 para el carácter nulo
                 snprintf(response, totalLength + 1, "%s %s %s", message, nickname1, nickname2);
@@ -222,10 +277,12 @@ void* handleClient(void* arg){
             }
         }
 
+        // Keep listening until the game is over
         while(isConnected){
             receiveRequest(connfd,flagRoom,numberOfPlayer,logFile);
         }
     }else{
+        // Kick out the user if there are no rooms 
         messageLog = "There are not available rooms yet";
         writeLog(logFile, messageLog);
         char* message = "GAME FULL";
@@ -234,7 +291,10 @@ void* handleClient(void* arg){
     }
 }
 
+//------------------------------------------------------------------------------------//
+
 void receiveRequest(int connfd, int numberOfRoom, int numberOfPlayer, char* logFile){
+    //reset the buffer
     char buff[RECV_BUFFER_SIZE];
     memset(buff, 0, sizeof(buff));
 
@@ -242,6 +302,7 @@ void receiveRequest(int connfd, int numberOfRoom, int numberOfPlayer, char* logF
 
     ssize_t bytes_received = recv(connfd, buff, sizeof(buff), 0);
 
+    //try getting the message if there it is
     if (bytes_received == -1) {
         if (errno == EWOULDBLOCK || errno == EAGAIN) {
             usleep(10000);
@@ -252,26 +313,33 @@ void receiveRequest(int connfd, int numberOfRoom, int numberOfPlayer, char* logF
             exit(1);
         }
     } else if (bytes_received == 0) {
-        // El cliente ha cerrado la conexión
+        // Client closes connection
         messageLog = "Client closes connection";
         writeLogRoom(numberOfRoom,numberOfPlayer,logFile,messageLog);
         close(connfd);
     } else {
-        // Procesar los datos recibidos
+        // Process the incoming message
         printf("From client: %s\n", buff);
         classifyRequest(connfd,buff,numberOfRoom,numberOfPlayer,logFile);
     }
 }
 
+//------------------------------------------------------------------------------------//
+
 void sendResponse(int numberOfRoom, int numberOfPlayer, int connfd, char *response, char *logFile){
+    // concat the log message
     int totalLength = snprintf(NULL, 0, "Server sends: %s", response);
     char *messageLog = (char*)malloc(totalLength + 1);  // +1 para el carácter nulo
     snprintf(messageLog, totalLength + 1, "Server sends: %s", response);
 
     writeLogRoom(numberOfRoom,numberOfPlayer,logFile,messageLog);
+
+    // send the response
     send(connfd, response, strlen(response),0);
     printf("To client: %s\n", response);
 }
+
+//------------------------------------------------------------------------------------//
 
 void classifyRequest(int connfd, char *request, int numberOfRoom, int numberOfPlayer, char* logFile){
 
@@ -282,6 +350,7 @@ void classifyRequest(int connfd, char *request, int numberOfRoom, int numberOfPl
 
     token = strtok(request, " ");
 
+    //tokenize the incoming string
     while(token != NULL){
         tokens[i] = token;
         token = strtok(NULL, " ");
@@ -326,6 +395,7 @@ void classifyRequest(int connfd, char *request, int numberOfRoom, int numberOfPl
             reqPlayerQuit(connfd, numberOfRoom, numberOfPlayer);
         }
         else{
+            //UNRECOGNIZED
             messageLog = "Error: <PLAYER>, second parameter unrecognized";
             writeLogRoom(numberOfRoom,numberOfPlayer,logFile,messageLog);
             printf("Error: <PLAYER>, second parameter unrecognized");
@@ -348,27 +418,35 @@ void classifyRequest(int connfd, char *request, int numberOfRoom, int numberOfPl
             reqPadStill(numberOfRoom, numberOfPlayer, logFile);
         }
         else{
+            //UNRECOGNIZED
             messageLog = "Error: <PAD>, second parameter unrecognized";
             writeLogRoom(numberOfRoom,numberOfPlayer,logFile,messageLog);
             printf("Error: <PAD>, second parameter unrecognized");
         }
     }
     else{
+        //UNRECOGNIZED
         messageLog = "Error: first parameter unrecognized while receiving a request";
         writeLogRoom(numberOfRoom,numberOfPlayer,logFile,messageLog);
         printf("Error: first parameter unrecognized");
     }
 }
 
+//------------------------------------------------------------------------------------//
+
 void reqPlayerLeft(int connfd, int numberOfRoom, int numberOfPlayer, char *logFile){
     char* response = "PLAYER DISCONNECTED";
     pthread_mutex_lock(&rooms[numberOfRoom].mutex);
+
+    //announce to the other player that te opponent left the game
     if (connfd == rooms[numberOfRoom].connfd1){
         sendResponse(numberOfRoom, 2, rooms[numberOfRoom].connfd2, response, logFile);
     }
     else if (connfd == rooms[numberOfRoom].connfd2){
         sendResponse(numberOfRoom, 1, rooms[numberOfRoom].connfd1, response, logFile);
     }
+
+    //reset rooms info
     rooms[numberOfRoom].clientsConnected = 0;
     rooms[numberOfRoom].nicknamePlayer1 = "";
     rooms[numberOfRoom].nicknamePlayer2 = "";
@@ -378,15 +456,23 @@ void reqPlayerLeft(int connfd, int numberOfRoom, int numberOfPlayer, char *logFi
     rooms[numberOfRoom].scorePlayer2 = 0;
     rooms[numberOfRoom].open = true;
     pthread_mutex_unlock(&rooms[numberOfRoom].mutex);
+
+    //close connection and kill the thread
     shutdown(connfd, SHUT_RDWR);
     pthread_exit(NULL);
 }
 
+//------------------------------------------------------------------------------------//
+
 void reqPlayerBye(int connfd, int numberOfRoom, int numberOfPlayer){
+    //just kill the thread
     pthread_exit(NULL);
 }
 
+//------------------------------------------------------------------------------------//
+
 void reqPlayerQuit(int connfd, int numberOfRoom, int numberOfPlayer){
+    //reset room info
     pthread_mutex_lock(&rooms[numberOfRoom].mutex);
     rooms[numberOfRoom].clientsConnected--;
     rooms[numberOfRoom].nicknamePlayer1 = NULL;
@@ -396,7 +482,10 @@ void reqPlayerQuit(int connfd, int numberOfRoom, int numberOfPlayer){
     pthread_exit(NULL);
 }
 
+//------------------------------------------------------------------------------------//
+
 void reqGameEnd(int connfd, int numberOfRoom, int numberOfPlayer){
+    //reset room information
     pthread_mutex_lock(&rooms[numberOfRoom].mutex);
     rooms[numberOfRoom].clientsConnected = 0;
     rooms[numberOfRoom].nicknamePlayer1 = "";
@@ -411,7 +500,10 @@ void reqGameEnd(int connfd, int numberOfRoom, int numberOfPlayer){
     pthread_exit(NULL);
 }
 
+//------------------------------------------------------------------------------------//
+
 void reqGamePoint(int numberOfRoom, int numberOfPlayer, char* side, char* logFile){
+    //update player information
     pthread_mutex_lock(&rooms[numberOfRoom].mutex);
     if (numberOfPlayer==1){
         rooms[numberOfRoom].scorePlayer1 += 1;
@@ -421,6 +513,7 @@ void reqGamePoint(int numberOfRoom, int numberOfPlayer, char* side, char* logFil
     }
     pthread_mutex_unlock(&rooms[numberOfRoom].mutex);
 
+    //concat log message
     int totalLength = snprintf(NULL, 0, "Server receives that %s scores a point", side);
     char *messageLog = (char*)malloc(totalLength + 1);  // +1 para el carácter nulo
     snprintf(messageLog, totalLength + 1, "Server receives that %s scores a point", side);
@@ -428,47 +521,23 @@ void reqGamePoint(int numberOfRoom, int numberOfPlayer, char* side, char* logFil
     writeLogRoom(numberOfRoom,numberOfPlayer,logFile,messageLog);
 }
 
-void writeLogRoom(int numberOfRoom, int numberOfPlayer, char* logFile, char* message){
-    int totalLength = snprintf(NULL, 0, "- source[room: %d|player: %d] - %s", numberOfRoom, numberOfPlayer, message);
-    char *messageLog = (char*)malloc(totalLength + 1);  // +1 para el carácter nulo
-    snprintf(messageLog, totalLength + 1, "- source[room: %d|player: %d] - %s", numberOfRoom, numberOfPlayer, message);
-
-    writeLog(logFile, messageLog);
-}
-
-void writeLog(char* logFile, char* message){
-    FILE *f = fopen(logFile, "a");
-    if (f == NULL){
-        printf("Error opening file!\n");
-        exit(1);
-    }
-    // Obtener la hora actual en segundos desde la época
-    time_t actualTime;
-    struct tm *infoTime;
-    
-    time(&actualTime);
-    infoTime = localtime(&actualTime);
-
-    // Formatear y mostrar la fecha y hora actual
-    fprintf(f,"[%02d/%02d/%04d %02d:%02d:%02d] %s\n",
-           infoTime->tm_mday, infoTime->tm_mon + 1, infoTime->tm_year + 1900,
-           infoTime->tm_hour, infoTime->tm_min, infoTime->tm_sec,message);
-    fclose(f);
-}
+//------------------------------------------------------------------------------------//
 
 void reqPlayerNew(int connfd, char* nickname, int numberOfRoom, int numberOfPlayer, char *logFile){
-    
+    //send the first player to wait 
     if(numberOfPlayer == 1){
         rooms[numberOfRoom].nicknamePlayer1 = strdup(nickname);
         rooms[numberOfRoom].connfd1 = connfd;
         char* response = "PLAYER WAIT";
         sendResponse(numberOfRoom, numberOfPlayer, connfd, response, logFile);
-    }
+    }//the second player updates the room information and starts the game
     else if(numberOfPlayer == 2){
         rooms[numberOfRoom].nicknamePlayer2=strdup(nickname);
         rooms[numberOfRoom].connfd2 = connfd;
     }
 }
+
+//------------------------------------------------------------------------------------//
 
 void reqPadUp(int numberOfRoom, int numberOfPlayer, char *logFile){
     char* response;
@@ -479,9 +548,12 @@ void reqPadUp(int numberOfRoom, int numberOfPlayer, char *logFile){
         response = "PAD MOVE UP RIGHT";
     }
 
+    // Send which player moves to both players
     sendResponse(numberOfRoom, 1, rooms[numberOfRoom].connfd1, response, logFile);
     sendResponse(numberOfRoom, 2, rooms[numberOfRoom].connfd2, response, logFile);
 }
+
+//------------------------------------------------------------------------------------//
 
 void reqPadDown(int numberOfRoom, int numberOfPlayer, char *logFile){
     char* response;
@@ -492,9 +564,12 @@ void reqPadDown(int numberOfRoom, int numberOfPlayer, char *logFile){
         response = "PAD MOVE DOWN RIGHT";
     }
 
+    // Send which player moves to both players
     sendResponse(numberOfRoom, 1, rooms[numberOfRoom].connfd1, response, logFile);
     sendResponse(numberOfRoom, 2, rooms[numberOfRoom].connfd2, response, logFile);
 }
+
+//------------------------------------------------------------------------------------//
 
 void reqPadStill(int numberOfRoom, int numberOfPlayer, char *logFile){
     char* response;
@@ -505,9 +580,12 @@ void reqPadStill(int numberOfRoom, int numberOfPlayer, char *logFile){
         response = "PAD MOVE STILL RIGHT";
     }
 
+    // Send which player stills to both players
     sendResponse(numberOfRoom, 1, rooms[numberOfRoom].connfd1, response, logFile);
     sendResponse(numberOfRoom, 2, rooms[numberOfRoom].connfd2, response, logFile);
 }
+
+//------------------------------------------------------------------------------------//
 
 void closeConnection(int sockfd){
     close(sockfd);

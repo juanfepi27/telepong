@@ -157,9 +157,9 @@ def pong(screen,font,clock,nicknamePlayer1,nicknamePlayer2,client_socket):
 	running = True
 
 	# Defining the objects
-	geek1 = Striker(screen,font,20, 0, 10, 100, 10, GREEN)
-	geek2 = Striker(screen,font,WIDTH-30, 0, 10, 100, 10, GREEN)
-	ball = Ball(screen,WIDTH//2, HEIGHT//2, 7, 10, WHITE)
+	geek1 = Striker(screen,font,0, 0, 10, 100, 10, GREEN)
+	geek2 = Striker(screen,font,WIDTH-10, 0, 10, 100, 10, GREEN)
+	ball = Ball(screen,WIDTH//2, HEIGHT//2, 10, 10, WHITE)
 
 	listOfGeeks = [geek1, geek2]
 
