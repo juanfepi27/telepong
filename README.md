@@ -27,7 +27,7 @@ As you can see the process goes in this order:
 
 2. The client in the other hand is also set up and connected to the server. Then it sends a message to the server saying PLAYER NEW <username>
 
-3. The server receives this message and checks if there is another player already connected, if there is only one player connected it sends PLAYER WAIT to the client and when they receive it, it takes the client to a black screen with the message "Waiting for other players". In case there was already another player connected the server sends the message GAME START <username1> <username2> and it takes both players to the interface of the game.
+3. The server receives this message and checks if there is another player already connected, if there is only one player connected it sends PLAYER WAIT to the client and when they receive it, it takes the client to a black screen with the message "Waiting for other players". In case there was already another player connected the server sends the message GAME START <username1> <username2> and it takes both players to the interface of the game. Finally, in case the maximum amount of players were already connected the server send GAME FULL, which means that the player needs to wait for a game to end for it to connect.
 
 4. When the game starts the server is constantly hearing both clients to check if they send any event and if so it sends the respective response. Meanwhile the client is also constantly sending messages and hearing for the responses of the server. Down below we are going to specify each message that the client can send and the responses of the server:
 
