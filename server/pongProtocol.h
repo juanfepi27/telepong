@@ -1,5 +1,5 @@
-#ifndef _MY_PONG_PROTOCOL
-#define _MY_PONG_PROTOCOL
+#ifndef _PONG_PROTOCOL
+#define _PONG_PROTOCOL
 
 #define PORT 50000
 #define ENCONDING_FORMAT "utf-8"
@@ -41,10 +41,12 @@ const char* CHANGE = "CHANGE"; //When the server sends the ball data to the clie
 
 void writeLog(char* logFile, char* message);
 void writeLogRoom(int numberOfRoom, int numberOfPLayer, char* logFile, char* message);
-int setUpServer(char* port, char* logFile);
+
+void setUpServer(char* port, char* logFile);
 void* handleClient(void* arg);
 void receiveRequest(int connfd, int numberOfRoom, int numberOfPlayer, char* logFile);
 void sendResponse(int numberOfRoom, int numberOfPlayer, int connfd, char *response, char* logFile);
+
 void classifyRequest(int connfd, char *request, int numberOfRoom, int numberOfPlayer, char* logFile);
 void reqPlayerLeft( int connfd, int numberOfRoom, int numberOfPlayer, char* logFile);
 void reqPlayerBye(int connfd, int numberOfRoom, int numberOfPlayer);
@@ -55,7 +57,8 @@ void reqPlayerNew(int connfd, char *nickname, int numberOfRoom, int numberOfPlay
 void reqPadUp(int numberOfRoom, int numberOfPlayer, char* logFile);
 void reqPadDown(int numberOfRoom, int numberOfPlayer, char* logFile);
 void reqPadStill(int numberOfRoom, int numberOfPlayer, char* logFile);
+
 void closeConnection(int sockfd);
 
-# include "myPongProtocol.c"
+# include "pongProtocol.c"
 # endif

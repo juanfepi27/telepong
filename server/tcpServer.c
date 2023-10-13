@@ -1,4 +1,4 @@
-#include "myPongProtocol.h"
+#include "pongProtocol.h"
 
 int main(int argc, char *argv[]){
 
