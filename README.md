@@ -76,3 +76,4 @@ Our game supports until 10 players at the same time, and it connects people in o
 - https://beej.us/guide/bgnet/
 - https://beej.us/guide/bgc/
 - https://youtu.be/U28svzb1WUs?si=6NuH1-Koet5_2uQc
+- https://www.geeksforgeeks.org/create-a-pong-game-in-python-pygame/
