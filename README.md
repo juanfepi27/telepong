@@ -9,7 +9,7 @@ Our implementation of the Pong game is not just a recreation of the traditional 
 
 - This project is structured around a central server and multiple clients. The server functions as the game coordinator, handling game state, synchronization, and communication between clients. The clients, in the other hand, handle user inputs and display the game interface. This design ensures a seamless and responsive gaming experience, while also enabling multiplayer gameplay across different devices.
 
-- Menawhile, socket programming is at the heart of this project. It allows for efficient and low-latency communication between the server and clients, making gameplay feel instantaneous and dynamic. Through the use of sockets, we've enabled the real-time exchange of game data, creating an engaging and interactive experience.
+- Meanwhile, socket programming is at the heart of this project. It allows for efficient and low-latency communication between the server and clients, making gameplay feel instantaneous and dynamic. Through the use of sockets, we've enabled the real-time exchange of game data, creating an engaging and interactive experience.
 
 Now, let's dive into the details of each part of this project. 
 
