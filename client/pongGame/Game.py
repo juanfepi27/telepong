@@ -265,11 +265,11 @@ def pong(screen,font,clock,nicknamePlayer1,nicknamePlayer2,client_socket):
 		# +1 -> Geek_2 has scored
 		# 0 -> None of them scored
 		if point == -1:
-			message = "GAME POINT LEFT"
+			message = "GAME POINT LEFT "
 			send_request(client_socket, message)
 			geek1Score += 1
 		elif point == 1:
-			message = "GAME POINT RIGHT"
+			message = "GAME POINT RIGHT "
 			send_request(client_socket, message)
 			geek2Score += 1
 
@@ -289,7 +289,7 @@ def pong(screen,font,clock,nicknamePlayer1,nicknamePlayer2,client_socket):
 		pygame.display.update()
 		clock.tick(FPS)
 
-		if geek1Score == 5 or geek2Score == 5:
+		if geek1Score == 10 or geek2Score == 10:
 			# Stop the runner
 			running = False
 
