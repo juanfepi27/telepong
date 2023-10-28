@@ -9,7 +9,7 @@ Our implementation of the Pong game is not just a recreation of the traditional 
 
 - This project is structured around a central server and multiple clients. The server functions as the game coordinator, handling game state, synchronization, and communication between clients. The clients, in the other hand, handle user inputs and display the game interface. This design ensures a seamless and responsive gaming experience, while also enabling multiplayer gameplay across different devices.
 
-- Menawhile, socket programming is at the heart of this project. It allows for efficient and low-latency communication between the server and clients, making gameplay feel instantaneous and dynamic. Through the use of sockets, we've enabled the real-time exchange of game data, creating an engaging and interactive experience.
+- Meanwhile, socket programming is at the heart of this project. It allows for efficient and low-latency communication between the server and clients, making gameplay feel instantaneous and dynamic. Through the use of sockets, we've enabled the real-time exchange of game data, creating an engaging and interactive experience.
 
 Now, let's dive into the details of each part of this project. 
 
@@ -31,11 +31,11 @@ As you can see the process goes in this order:
 
 4. When the game starts the server is constantly hearing both clients to check if they send any event and if so it sends the respective response. Meanwhile the client is also constantly sending messages and hearing for the responses of the server. Down below we are going to specify each message that the client can send and the responses of the server:
 
-    - PAD UP: When the client presses the up arrow key it sends this message to the server, the server analyzes which of the clients send it and classifies it as LEFT or RIGHT, it then sends this message to both clients and changes the position of the respective pad.
+    - PAD UP: When the client presses the up arrow key it sends this message to the server, the server analyzes which of the clients send it and classifies it as LEFT or RIGHT, it then sends the message PAD MOVE to both clients and changes the position of the respective pad.
 
-    - PAD DOWN: When the client presses the down arrow key it sends this message to the server, the server analyzes which of the clients send it and classifies it as LEFT or RIGHT, it then sends this message to both clients and changes the position of the respective pad.
+    - PAD DOWN: When the client presses the down arrow key it sends this message to the server, the server analyzes which of the clients send it and classifies it as LEFT or RIGHT, it then sends the message PAD MOVE to both clients and changes the position of the respective pad.
 
-    - PAD STILL: When the client doesn't press any key it sends this message to the server, the server analyzes which of the clients send it and classifies it as LEFT or RIGHT, it then sends this message to both clients and changes the position of the respective pad.
+    - PAD STILL: When the client doesn't press any key it sends this message to the server, the server analyzes which of the clients send it and classifies it as LEFT or RIGHT, it then sends the message PAD MOVE to both clients and changes the position of the respective pad.
 
     - PLAYER LEFT: When the client closes the interface in the middle of the game it sends this message to the server and the server sends PLAYER DISCONNECTED, which takes the player that still remains in the game to a black screen with the message "You won! the other player left the game".
 
@@ -75,3 +75,5 @@ Our game supports until 10 players at the same time, and it connects people in o
 - https://www.geeksforgeeks.org/tcp-server-client-implementation-in-c/
 - https://beej.us/guide/bgnet/
 - https://beej.us/guide/bgc/
+- https://youtu.be/U28svzb1WUs?si=6NuH1-Koet5_2uQc
+- https://www.geeksforgeeks.org/create-a-pong-game-in-python-pygame/
