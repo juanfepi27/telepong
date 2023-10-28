@@ -342,7 +342,7 @@ void sendResponse(int numberOfRoom, int numberOfPlayer, int connfd, char *respon
 
 void classifyRequest(int connfd, char *request, int numberOfRoom, int numberOfPlayer, char* logFile){
 
-    char *tokens[3];
+    char *tokens[10];
     char *token;
     char *messageLog;
     int i = 0;
