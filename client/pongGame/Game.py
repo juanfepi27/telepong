@@ -231,16 +231,16 @@ def pong(screen,font,clock,nicknamePlayer1,nicknamePlayer2,client_socket):
 			# Pressing keys
 			if event.type == pygame.KEYDOWN:
 				if event.key == pygame.K_UP:
-					message = "PAD UP"
+					message = "PAD UP "
 					send_request(client_socket, message)
 				if event.key == pygame.K_DOWN:
-					message = "PAD DOWN"
+					message = "PAD DOWN "
 					send_request(client_socket, message)
 
 			# Releasing keys
 			if event.type == pygame.KEYUP:
 				if event.key == pygame.K_UP or event.key == pygame.K_DOWN:
-					message = "PAD STILL"
+					message = "PAD STILL "
 					send_request(client_socket, message)
 
 			# Press X button
